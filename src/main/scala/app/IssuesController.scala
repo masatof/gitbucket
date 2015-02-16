@@ -9,14 +9,15 @@ import util.Implicits._
 import util.ControlUtil._
 import org.scalatra.Ok
 import model.Issue
+import service.HubotWebHookService.HubotWebHookPayload
 
 class IssuesController extends IssuesControllerBase
   with IssuesService with RepositoryService with AccountService with LabelsService with MilestonesService with ActivityService
-  with ReadableUsersAuthenticator with ReferrerAuthenticator with CollaboratorsAuthenticator
+  with ReadableUsersAuthenticator with ReferrerAuthenticator with CollaboratorsAuthenticator with HubotWebHookService
 
 trait IssuesControllerBase extends ControllerBase {
   self: IssuesService with RepositoryService with AccountService with LabelsService with MilestonesService with ActivityService
-    with ReadableUsersAuthenticator with ReferrerAuthenticator with CollaboratorsAuthenticator =>
+    with ReadableUsersAuthenticator with ReferrerAuthenticator with CollaboratorsAuthenticator with HubotWebHookService =>
 
   case class IssueCreateForm(title: String, content: Option[String],
     assignedUserName: Option[String], milestoneId: Option[Int], labelNames: Option[String])
@@ -118,6 +119,7 @@ trait IssuesControllerBase extends ControllerBase {
       Notifier().toNotify(repository, issueId, form.content.getOrElse("")){
         Notifier.msgIssue(s"${context.baseUrl}/${owner}/${name}/issues/${issueId}")
       }
+      callHubotWebHook(HubotWebHookPayload(repository.owner, repository.name, issueId, form.content.getOrElse("")))
 
       redirect(s"/${owner}/${name}/issues/${issueId}")
     }
@@ -379,6 +381,7 @@ trait IssuesControllerBase extends ControllerBase {
                 Notifier.msgStatus(s"${context.baseUrl}/${owner}/${name}/issues/${issueId}")
               }
             }
+            callHubotWebHook(HubotWebHookPayload(repository.owner, repository.name, issueId, _))
         }
 
         issue -> commentId

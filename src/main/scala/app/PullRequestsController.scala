@@ -16,17 +16,18 @@ import org.slf4j.LoggerFactory
 import org.eclipse.jgit.merge.MergeStrategy
 import org.eclipse.jgit.errors.NoMergeBaseException
 import service.WebHookService.WebHookPayload
+import service.HubotWebHookService.HubotWebHookPayload
 import util.JGitUtil.DiffInfo
 import util.JGitUtil.CommitInfo
 
 
 class PullRequestsController extends PullRequestsControllerBase
   with RepositoryService with AccountService with IssuesService with PullRequestService with MilestonesService with LabelsService
-  with CommitsService with ActivityService with WebHookService with ReferrerAuthenticator with CollaboratorsAuthenticator
+  with CommitsService with ActivityService with WebHookService with ReferrerAuthenticator with CollaboratorsAuthenticator with HubotWebHookService
 
 trait PullRequestsControllerBase extends ControllerBase {
   self: RepositoryService with AccountService with IssuesService with MilestonesService with LabelsService
-    with CommitsService with ActivityService with PullRequestService with WebHookService with ReferrerAuthenticator with CollaboratorsAuthenticator =>
+    with CommitsService with ActivityService with PullRequestService with WebHookService with ReferrerAuthenticator with CollaboratorsAuthenticator with HubotWebHookService =>
 
   private val logger = LoggerFactory.getLogger(classOf[PullRequestsControllerBase])
 
@@ -205,6 +206,7 @@ trait PullRequestsControllerBase extends ControllerBase {
             Notifier().toNotify(repository, issueId, "merge"){
               Notifier.msgStatus(s"${context.baseUrl}/${owner}/${name}/pull/${issueId}")
             }
+            callHubotWebHook(HubotWebHookPayload(repository.owner, repository.name, issueId, "merge"))
 
             redirect(s"/${owner}/${name}/pull/${issueId}")
           }
@@ -361,6 +363,7 @@ trait PullRequestsControllerBase extends ControllerBase {
     Notifier().toNotify(repository, issueId, form.content.getOrElse("")){
       Notifier.msgPullRequest(s"${context.baseUrl}/${repository.owner}/${repository.name}/pull/${issueId}")
     }
+    callHubotWebHook(HubotWebHookPayload(repository.owner, repository.name, issueId, form.content.getOrElse("")))
 
     redirect(s"/${repository.owner}/${repository.name}/pull/${issueId}")
   })
