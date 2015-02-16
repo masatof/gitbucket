@@ -381,7 +381,7 @@ trait IssuesControllerBase extends ControllerBase {
                 Notifier.msgStatus(s"${context.baseUrl}/${owner}/${name}/issues/${issueId}")
               }
             }
-            callHubotWebHook(HubotWebHookPayload(repository.owner, repository.name, issueId, _))
+            callHubotWebHook(HubotWebHookPayload(repository.owner, repository.name, issueId, "comment"))
         }
 
         issue -> commentId
