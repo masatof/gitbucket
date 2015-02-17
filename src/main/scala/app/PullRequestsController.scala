@@ -206,7 +206,6 @@ trait PullRequestsControllerBase extends ControllerBase {
             Notifier().toNotify(repository, issueId, "merge"){
               Notifier.msgStatus(s"${context.baseUrl}/${owner}/${name}/pull/${issueId}")
             }
-            callHubotWebHook(HubotWebHookPayload(repository.owner, repository.name, issueId, "merge"))
 
             redirect(s"/${owner}/${name}/pull/${issueId}")
           }
